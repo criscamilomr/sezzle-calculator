@@ -1,0 +1,53 @@
+:root {
+  --bg-primary: #0f141c;
+  --bg-card: #161d27;
+  --bg-display: #0b0f15;
+  --bg-btn-num: #1f2937;
+  --bg-btn-num-hover: #283548;
+  --bg-btn-fn: #18202c;
+  --bg-btn-fn-hover: #222d3d;
+  --bg-btn-op: #26334d;
+  --bg-btn-op-hover: #314161;
+  --bg-btn-op-active: #3b82f6;
+  --bg-btn-eq: #2563eb;
+  --bg-btn-eq-hover: #1d4ed8;
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --accent-primary: #60a5fa;
+  --accent-result: #38bdf8;
+  --border-subtle: #263040;
+  --error-bg: rgba(239, 68, 68, 0.12);
+  --error-border: rgba(239, 68, 68, 0.35);
+  --error-text: #fca5a5;
+
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    Roboto, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color: var(--text-primary);
+  background-color: var(--bg-primary);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  min-height: 100vh;
+  background-color: var(--bg-primary);
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}

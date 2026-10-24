@@ -1,0 +1,763 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>calculator: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">github.com/criscamilomr/sezzle-calculator/backend/internal/calculator/calculator.go (96.3%)</option>
+				
+				<option value="file1">github.com/criscamilomr/sezzle-calculator/backend/internal/handler/handler.go (100.0%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package calculator
+
+import (
+        "errors"
+        "math"
+        "strconv"
+        "strings"
+        "unicode"
+)
+
+type Operation string
+
+const (
+        Add      Operation = "add"
+        Subtract Operation = "subtract"
+        Multiply Operation = "multiply"
+        Divide   Operation = "divide"
+        Exponent Operation = "exponent"
+        Percent  Operation = "percent"
+        Sqrt     Operation = "sqrt"
+)
+
+var (
+        ErrDivisionByZero    = errors.New("division by zero is not allowed")
+        ErrNegativeSqrt      = errors.New("cannot calculate square root of a negative number")
+        ErrInvalidOperation  = errors.New("invalid operation")
+        ErrMissingNumbers    = errors.New("invalid number of operands for operation")
+        ErrInvalidExpression = errors.New("invalid mathematical expression")
+        ErrOverflow          = errors.New("result is out of range or undefined")
+)
+
+const floatPrecision = 1e10
+
+// Calculate performs a single operation across one (for Sqrt or unary Percent) or two-or-more numbers.
+func Calculate(operation Operation, numbers []float64) (float64, error) {
+        <span class="cov8" title="1">if operation == Sqrt </span>{
+                <span class="cov8" title="1">if len(numbers) != 1 </span>{
+                        <span class="cov8" title="1">return 0, ErrMissingNumbers
+</span>                }
+                <span class="cov8" title="1">if numbers[0] &lt; 0 </span>{
+                        <span class="cov8" title="1">return 0, ErrNegativeSqrt
+</span>                }
+                <span class="cov8" title="1">res := math.Sqrt(numbers[0])
+                if err := validateNumber(res); err != nil </span>{
+                        <span class="cov0" title="0">return 0, err
+</span>                }
+                <span class="cov8" title="1">return normalizeFloat(res), nil</span>
+        }
+
+        <span class="cov8" title="1">if operation == Percent &amp;&amp; len(numbers) == 1 </span>{
+                <span class="cov8" title="1">res := numbers[0] / 100
+                if err := validateNumber(res); err != nil </span>{
+                        <span class="cov0" title="0">return 0, err
+</span>                }
+                <span class="cov8" title="1">return normalizeFloat(res), nil</span>
+        }
+
+        <span class="cov8" title="1">if !isBinaryOperation(operation) </span>{
+                <span class="cov8" title="1">return 0, ErrInvalidOperation
+</span>        }
+
+        <span class="cov8" title="1">if len(numbers) &lt; 2 </span>{
+                <span class="cov8" title="1">return 0, ErrMissingNumbers
+</span>        }
+
+        <span class="cov8" title="1">result := numbers[0]
+        for i := 1; i &lt; len(numbers); i++ </span>{
+                <span class="cov8" title="1">var err error
+                result, err = applyBinaryOperation(operation, result, numbers[i])
+                if err != nil </span>{
+                        <span class="cov8" title="1">return 0, err
+</span>                }
+        }
+
+        <span class="cov8" title="1">return normalizeFloat(result), nil</span>
+}
+
+// CalculateMixed evaluates a sequence of numbers and binary operations (e.g., numbers: [5, 2, 3], operations: [Add, Multiply] -&gt; 5 + 2 * 3 = 11)
+// respecting standard mathematical operator precedence (PEMDAS/BODMAS).
+func CalculateMixed(numbers []float64, operations []Operation) (float64, error) {
+        <span class="cov8" title="1">if len(numbers) &lt; 2 || len(operations) != len(numbers)-1 </span>{
+                <span class="cov8" title="1">return 0, ErrMissingNumbers
+</span>        }
+
+        <span class="cov8" title="1">for _, op := range operations </span>{
+                <span class="cov8" title="1">if !isBinaryOperation(op) </span>{
+                        <span class="cov8" title="1">return 0, ErrInvalidOperation
+</span>                }
+        }
+
+        <span class="cov8" title="1">nums := make([]float64, len(numbers))
+        copy(nums, numbers)
+        ops := make([]Operation, len(operations))
+        copy(ops, operations)
+</span>
+        // Pass 1: Exponentiation (highest binary precedence)
+        <span class="cov8" title="1">var err error
+        nums, ops, err = reducePrecedenceLevel(nums, ops, func(op Operation) bool </span>{
+                <span class="cov8" title="1">return op == Exponent
+</span>        })
+        <span class="cov8" title="1">if err != nil </span>{
+                <span class="cov8" title="1">return 0, err
+</span>        }
+
+        // Pass 2: Multiplication, Division, Percentage
+        <span class="cov8" title="1">nums, ops, err = reducePrecedenceLevel(nums, ops, func(op Operation) bool </span>{
+                <span class="cov8" title="1">return op == Multiply || op == Divide || op == Percent
+</span>        })
+        <span class="cov8" title="1">if err != nil </span>{
+                <span class="cov8" title="1">return 0, err
+</span>        }
+
+        // Pass 3: Addition, Subtraction
+        <span class="cov8" title="1">nums, _, err = reducePrecedenceLevel(nums, ops, func(op Operation) bool </span>{
+                <span class="cov8" title="1">return op == Add || op == Subtract
+</span>        })
+        <span class="cov8" title="1">if err != nil </span>{
+                <span class="cov8" title="1">return 0, err
+</span>        }
+
+        <span class="cov8" title="1">return normalizeFloat(nums[0]), nil</span>
+}
+
+// EvaluateExpression parses and evaluates a mathematical expression string (e.g., "50×10%", "200-15%", "200+15%", "5+2×3", "1+6+9+5+3", "√(144)+5²")
+// with full operator precedence, parentheses, unary operators, and percentage calculations.
+func EvaluateExpression(expr string) (float64, error) {
+        <span class="cov8" title="1">normalized := normalizeExpressionSymbols(expr)
+        if strings.TrimSpace(normalized) == "" </span>{
+                <span class="cov8" title="1">return 0, ErrInvalidExpression
+</span>        }
+
+        <span class="cov8" title="1">p := &amp;exprParser{input: normalized}
+        result, err := p.parseExpression()
+        if err != nil </span>{
+                <span class="cov8" title="1">return 0, err
+</span>        }
+
+        <span class="cov8" title="1">p.skipWhitespace()
+        if p.pos &lt; len(p.input) </span>{
+                <span class="cov8" title="1">return 0, ErrInvalidExpression
+</span>        }
+
+        <span class="cov8" title="1">if err := validateNumber(result); err != nil </span>{
+                <span class="cov0" title="0">return 0, err
+</span>        }
+
+        <span class="cov8" title="1">return normalizeFloat(result), nil</span>
+}
+
+func isBinaryOperation(op Operation) bool {
+        <span class="cov8" title="1">switch op </span>{
+        case Add, Subtract, Multiply, Divide, Exponent, Percent:
+                <span class="cov8" title="1">return true</span>
+        default:
+                <span class="cov8" title="1">return false</span>
+        }
+}
+
+func applyBinaryOperation(op Operation, a, b float64) (float64, error) {
+        <span class="cov8" title="1">var res float64
+        switch op </span>{
+        case Add:
+                <span class="cov8" title="1">res = a + b</span>
+        case Subtract:
+                <span class="cov8" title="1">res = a - b</span>
+        case Multiply:
+                <span class="cov8" title="1">res = a * b</span>
+        case Divide:
+                <span class="cov8" title="1">if b == 0 </span>{
+                        <span class="cov8" title="1">return 0, ErrDivisionByZero
+</span>                }
+                <span class="cov8" title="1">res = a / b</span>
+        case Exponent:
+                <span class="cov8" title="1">res = math.Pow(a, b)</span>
+        case Percent:
+                // Calculates b% of a (e.g., 50 * (10 / 100) = 5)
+                <span class="cov8" title="1">res = (a * b) / 100</span>
+        default:
+                <span class="cov0" title="0">return 0, ErrInvalidOperation</span>
+        }
+
+        <span class="cov8" title="1">if err := validateNumber(res); err != nil </span>{
+                <span class="cov8" title="1">return 0, err
+</span>        }
+        <span class="cov8" title="1">return res, nil</span>
+}
+
+func reducePrecedenceLevel(
+        nums []float64,
+        ops []Operation,
+        matches func(Operation) bool,
+) ([]float64, []Operation, error) {
+        <span class="cov8" title="1">nextNums := []float64{nums[0]}
+        var nextOps []Operation
+</span>
+        <span class="cov8" title="1">for i, op := range ops </span>{
+                <span class="cov8" title="1">right := nums[i+1]
+                if matches(op) </span>{
+                        <span class="cov8" title="1">left := nextNums[len(nextNums)-1]
+                        val, err := applyBinaryOperation(op, left, right)
+                        if err != nil </span>{
+                                <span class="cov8" title="1">return nil, nil, err
+</span>                        }
+                        <span class="cov8" title="1">nextNums[len(nextNums)-1] = val</span>
+                } else {
+                        <span class="cov8" title="1">nextNums = append(nextNums, right)
+                        nextOps = append(nextOps, op)
+</span>                }
+        }
+
+        <span class="cov8" title="1">return nextNums, nextOps, nil</span>
+}
+
+func validateNumber(val float64) error {
+        <span class="cov8" title="1">if math.IsInf(val, 0) || math.IsNaN(val) </span>{
+                <span class="cov8" title="1">return ErrOverflow
+</span>        }
+        <span class="cov8" title="1">return nil</span>
+}
+
+// normalizeFloat eliminates standard IEEE 754 floating-point noise (e.g., 0.1 + 0.2 = 0.30000000000000004).
+func normalizeFloat(val float64) float64 {
+        <span class="cov8" title="1">if val == 0 </span>{
+                <span class="cov8" title="1">return 0 // Avoid returning -0
+</span>        }
+        <span class="cov8" title="1">return math.Round(val*floatPrecision) / floatPrecision</span>
+}
+
+var superscriptDigits = map[rune]byte{
+        '⁰': '0',
+        '¹': '1',
+        '²': '2',
+        '³': '3',
+        '⁴': '4',
+        '⁵': '5',
+        '⁶': '6',
+        '⁷': '7',
+        '⁸': '8',
+        '⁹': '9',
+}
+
+// normalizeExpressionSymbols replaces visual math symbols (×, ÷, −, √, and superscripts like 5²) with ASCII equivalents for parsing.
+func normalizeExpressionSymbols(expr string) string {
+        <span class="cov8" title="1">replacer := strings.NewReplacer(
+                "×", "*",
+                "÷", "/",
+                "−", "-",
+                "√", "sqrt",
+        )
+        replaced := replacer.Replace(expr)
+</span>
+        <span class="cov8" title="1">var b strings.Builder
+        b.Grow(len(replaced) + 4)
+        inSuperscript := false
+</span>
+        <span class="cov8" title="1">for _, r := range replaced </span>{
+                <span class="cov8" title="1">if digit, ok := superscriptDigits[r]; ok </span>{
+                        <span class="cov8" title="1">if !inSuperscript </span>{
+                                <span class="cov8" title="1">b.WriteByte('^')
+                                inSuperscript = true
+</span>                        }
+                        <span class="cov8" title="1">b.WriteByte(digit)</span>
+                } else {
+                        <span class="cov8" title="1">inSuperscript = false
+                        b.WriteRune(r)
+</span>                }
+        }
+
+        <span class="cov8" title="1">return b.String()</span>
+}
+
+// Recursive descent parser for mathematical expressions.
+// Grammar:
+//   Expression := Term ( ('+' | '-') Term )*
+//                 Note: If a right-hand Term is a standalone percentage (e.g. 200 - 15% or 200 + 15%),
+//                 it computes a discount/increment relative to the left value: left ± (left * right).
+//   Term       := Power ( ('*' | '/') Power )*
+//   Power      := Unary ( '^' Unary )*
+//   Unary      := ('+' | '-') Unary | 'sqrt' Unary | Postfix
+//   Postfix    := Primary ('%')*   -&gt; converts X% into X / 100 (e.g. 10% -&gt; 0.1, so 50 * 10% = 5)
+//   Primary    := Number | '(' Expression ')'
+type exprParser struct {
+        input string
+        pos   int
+}
+
+func (p *exprParser) skipWhitespace() {
+        <span class="cov8" title="1">for p.pos &lt; len(p.input) &amp;&amp; unicode.IsSpace(rune(p.input[p.pos])) </span>{
+                <span class="cov8" title="1">p.pos++
+</span>        }
+}
+
+func (p *exprParser) parseExpression() (float64, error) {
+        <span class="cov8" title="1">left, _, err := p.parseTerm()
+        if err != nil </span>{
+                <span class="cov8" title="1">return 0, err
+</span>        }
+
+        <span class="cov8" title="1">for </span>{
+                <span class="cov8" title="1">p.skipWhitespace()
+                if p.pos &gt;= len(p.input) </span>{
+                        <span class="cov8" title="1">break</span>
+                }
+                <span class="cov8" title="1">ch := p.input[p.pos]
+                if ch != '+' &amp;&amp; ch != '-' </span>{
+                        <span class="cov8" title="1">break</span>
+                }
+                <span class="cov8" title="1">p.pos++
+</span>
+                <span class="cov8" title="1">right, rightIsBarePercent, err := p.parseTerm()
+                if err != nil </span>{
+                        <span class="cov8" title="1">return 0, err
+</span>                }
+
+                // If the user wrote "A + B%" or "A - B%" (discount / markup), B% is relative to A (i.e. A * (B/100)).
+                <span class="cov8" title="1">operand := right
+                if rightIsBarePercent </span>{
+                        <span class="cov8" title="1">operand = left * right
+</span>                }
+
+                <span class="cov8" title="1">op := Add
+                if ch == '-' </span>{
+                        <span class="cov8" title="1">op = Subtract
+</span>                }
+                <span class="cov8" title="1">left, err = applyBinaryOperation(op, left, operand)
+                if err != nil </span>{
+                        <span class="cov0" title="0">return 0, err
+</span>                }
+        }
+
+        <span class="cov8" title="1">return left, nil</span>
+}
+
+func (p *exprParser) parseTerm() (float64, bool, error) {
+        <span class="cov8" title="1">left, isBarePercent, err := p.parsePower()
+        if err != nil </span>{
+                <span class="cov8" title="1">return 0, false, err
+</span>        }
+
+        <span class="cov8" title="1">for </span>{
+                <span class="cov8" title="1">p.skipWhitespace()
+                if p.pos &gt;= len(p.input) </span>{
+                        <span class="cov8" title="1">break</span>
+                }
+                <span class="cov8" title="1">ch := p.input[p.pos]
+                if ch != '*' &amp;&amp; ch != '/' </span>{
+                        <span class="cov8" title="1">break</span>
+                }
+                <span class="cov8" title="1">p.pos++
+</span>
+                <span class="cov8" title="1">right, _, err := p.parsePower()
+                if err != nil </span>{
+                        <span class="cov8" title="1">return 0, false, err
+</span>                }
+
+                <span class="cov8" title="1">var op Operation
+                if ch == '*' </span>{
+                        <span class="cov8" title="1">op = Multiply
+</span>                } else {
+                        <span class="cov8" title="1">op = Divide
+</span>                }
+
+                <span class="cov8" title="1">left, err = applyBinaryOperation(op, left, right)
+                if err != nil </span>{
+                        <span class="cov8" title="1">return 0, false, err
+</span>                }
+                // Once combined in multiplication/division (e.g., 50 * 10% = 5), the result is already a proportional value, not a bare %
+                <span class="cov8" title="1">isBarePercent = false</span>
+        }
+
+        <span class="cov8" title="1">return left, isBarePercent, nil</span>
+}
+
+func (p *exprParser) parsePower() (float64, bool, error) {
+        <span class="cov8" title="1">left, isBarePercent, err := p.parseUnary()
+        if err != nil </span>{
+                <span class="cov8" title="1">return 0, false, err
+</span>        }
+
+        <span class="cov8" title="1">for </span>{
+                <span class="cov8" title="1">p.skipWhitespace()
+                if p.pos &gt;= len(p.input) || p.input[p.pos] != '^' </span>{
+                        <span class="cov8" title="1">break</span>
+                }
+                <span class="cov8" title="1">p.pos++
+</span>
+                <span class="cov8" title="1">right, _, err := p.parseUnary()
+                if err != nil </span>{
+                        <span class="cov8" title="1">return 0, false, err
+</span>                }
+
+                <span class="cov8" title="1">left, err = applyBinaryOperation(Exponent, left, right)
+                if err != nil </span>{
+                        <span class="cov8" title="1">return 0, false, err
+</span>                }
+                <span class="cov8" title="1">isBarePercent = false</span>
+        }
+
+        <span class="cov8" title="1">return left, isBarePercent, nil</span>
+}
+
+func (p *exprParser) parseUnary() (float64, bool, error) {
+        <span class="cov8" title="1">p.skipWhitespace()
+        if p.pos &gt;= len(p.input) </span>{
+                <span class="cov8" title="1">return 0, false, ErrInvalidExpression
+</span>        }
+
+        <span class="cov8" title="1">if p.input[p.pos] == '+' </span>{
+                <span class="cov8" title="1">p.pos++
+                val, isPct, err := p.parseUnary()
+                return val, isPct, err
+</span>        }
+
+        <span class="cov8" title="1">if p.input[p.pos] == '-' </span>{
+                <span class="cov8" title="1">p.pos++
+                val, isPct, err := p.parseUnary()
+                if err != nil </span>{
+                        <span class="cov8" title="1">return 0, false, err
+</span>                }
+                <span class="cov8" title="1">return -val, isPct, nil</span>
+        }
+
+        <span class="cov8" title="1">if strings.HasPrefix(p.input[p.pos:], "sqrt") </span>{
+                <span class="cov8" title="1">p.pos += 4
+                val, _, err := p.parseUnary()
+                if err != nil </span>{
+                        <span class="cov8" title="1">return 0, false, err
+</span>                }
+                <span class="cov8" title="1">if val &lt; 0 </span>{
+                        <span class="cov8" title="1">return 0, false, ErrNegativeSqrt
+</span>                }
+                <span class="cov8" title="1">res := math.Sqrt(val)
+                if err := validateNumber(res); err != nil </span>{
+                        <span class="cov0" title="0">return 0, false, err
+</span>                }
+                <span class="cov8" title="1">return res, false, nil</span>
+        }
+
+        <span class="cov8" title="1">return p.parsePostfix()</span>
+}
+
+func (p *exprParser) parsePostfix() (float64, bool, error) {
+        <span class="cov8" title="1">val, err := p.parsePrimary()
+        if err != nil </span>{
+                <span class="cov8" title="1">return 0, false, err
+</span>        }
+
+        <span class="cov8" title="1">isPercent := false
+        for </span>{
+                <span class="cov8" title="1">p.skipWhitespace()
+                if p.pos &lt; len(p.input) &amp;&amp; p.input[p.pos] == '%' </span>{
+                        <span class="cov8" title="1">p.pos++
+                        val = val / 100.0
+                        isPercent = true
+                        if err := validateNumber(val); err != nil </span>{
+                                <span class="cov0" title="0">return 0, false, err
+</span>                        }
+                } else {
+                        <span class="cov8" title="1">break</span>
+                }
+        }
+
+        <span class="cov8" title="1">return val, isPercent, nil</span>
+}
+
+func (p *exprParser) parsePrimary() (float64, error) {
+        <span class="cov8" title="1">p.skipWhitespace()
+        if p.pos &gt;= len(p.input) </span>{
+                <span class="cov0" title="0">return 0, ErrInvalidExpression
+</span>        }
+
+        <span class="cov8" title="1">if p.input[p.pos] == '(' </span>{
+                <span class="cov8" title="1">p.pos++
+                val, err := p.parseExpression()
+                if err != nil </span>{
+                        <span class="cov8" title="1">return 0, err
+</span>                }
+                <span class="cov8" title="1">p.skipWhitespace()
+                if p.pos &gt;= len(p.input) || p.input[p.pos] != ')' </span>{
+                        <span class="cov8" title="1">return 0, ErrInvalidExpression
+</span>                }
+                <span class="cov8" title="1">p.pos++
+                return val, nil</span>
+        }
+
+        <span class="cov8" title="1">start := p.pos
+        hasDot := false
+        for p.pos &lt; len(p.input) </span>{
+                <span class="cov8" title="1">ch := p.input[p.pos]
+                if ch == '.' </span>{
+                        <span class="cov8" title="1">if hasDot </span>{
+                                <span class="cov8" title="1">return 0, ErrInvalidExpression
+</span>                        }
+                        <span class="cov8" title="1">hasDot = true
+                        p.pos++</span>
+                } else <span class="cov8" title="1">if ch &gt;= '0' &amp;&amp; ch &lt;= '9' </span>{
+                        <span class="cov8" title="1">p.pos++
+</span>                } else {
+                        <span class="cov8" title="1">break</span>
+                }
+        }
+
+        <span class="cov8" title="1">if start == p.pos || p.input[start:p.pos] == "." </span>{
+                <span class="cov8" title="1">return 0, ErrInvalidExpression
+</span>        }
+
+        <span class="cov8" title="1">val, err := strconv.ParseFloat(p.input[start:p.pos], 64)
+        if err != nil </span>{
+                <span class="cov0" title="0">return 0, ErrInvalidExpression
+</span>        }
+
+        <span class="cov8" title="1">return val, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">package handler
+
+import (
+        "encoding/json"
+        "errors"
+        "io"
+        "net/http"
+
+        "github.com/criscamilomr/sezzle-calculator/backend/internal/calculator"
+)
+
+const maxBodyBytes = 64 &lt;&lt; 10 // 64 KB limit to prevent large payload abuse
+
+// Error codes returned in ErrorResponse for programmatic frontend handling.
+const (
+        CodeInvalidJSON       = "INVALID_JSON"
+        CodeInvalidOperation  = "INVALID_OPERATION"
+        CodeInvalidExpression = "INVALID_EXPRESSION"
+        CodeMissingNumbers    = "MISSING_NUMBERS"
+        CodeDivisionByZero    = "DIVISION_BY_ZERO"
+        CodeNegativeSqrt      = "NEGATIVE_SQRT"
+        CodeOverflow          = "NUMERIC_OVERFLOW"
+        CodeInternalError     = "INTERNAL_ERROR"
+)
+
+type CalculateRequest struct {
+        Expression string                 `json:"expression,omitempty"`
+        Operation  calculator.Operation   `json:"operation,omitempty"`
+        Operations []calculator.Operation `json:"operations,omitempty"`
+        Numbers    []float64              `json:"numbers,omitempty"`
+}
+
+type CalculateResponse struct {
+        Result     float64              `json:"result"`
+        Operation  calculator.Operation `json:"operation,omitempty"`
+        Expression string               `json:"expression,omitempty"`
+}
+
+type ErrorResponse struct {
+        Error string `json:"error"`
+        Code  string `json:"code"`
+}
+
+type HealthResponse struct {
+        Status string `json:"status"`
+}
+
+type Handler struct{}
+
+func NewHandler() *Handler {
+        <span class="cov8" title="1">return &amp;Handler{}
+</span>}
+
+func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
+        <span class="cov8" title="1">mux.HandleFunc("POST /api/v1/calculate", h.Calculate)
+        mux.HandleFunc("GET /api/v1/health", h.Health)
+</span>}
+
+func (h *Handler) Health(w http.ResponseWriter, r *http.Request) {
+        <span class="cov8" title="1">writeJSON(w, http.StatusOK, HealthResponse{Status: "ok"})
+</span>}
+
+func (h *Handler) Calculate(w http.ResponseWriter, r *http.Request) {
+        <span class="cov8" title="1">r.Body = http.MaxBytesReader(w, r.Body, maxBodyBytes)
+        defer r.Body.Close()
+</span>
+        <span class="cov8" title="1">var req CalculateRequest
+        decoder := json.NewDecoder(r.Body)
+        decoder.DisallowUnknownFields()
+</span>
+        <span class="cov8" title="1">if err := decoder.Decode(&amp;req); err != nil </span>{
+                <span class="cov8" title="1">writeError(w, http.StatusBadRequest, "invalid JSON payload", CodeInvalidJSON)
+                return
+</span>        }
+
+        // Ensure the body contains only a single JSON object.
+        <span class="cov8" title="1">if err := decoder.Decode(&amp;struct{}{}); err != io.EOF </span>{
+                <span class="cov8" title="1">writeError(w, http.StatusBadRequest, "request body must contain a single JSON object", CodeInvalidJSON)
+                return
+</span>        }
+
+        <span class="cov8" title="1">var (
+                result float64
+                err    error
+                opName calculator.Operation
+        )
+</span>
+        <span class="cov8" title="1">switch </span>{
+        case req.Expression != "":
+                <span class="cov8" title="1">result, err = calculator.EvaluateExpression(req.Expression)
+                opName = calculator.Operation("expression")</span>
+        case len(req.Operations) &gt; 0:
+                <span class="cov8" title="1">result, err = calculator.CalculateMixed(req.Numbers, req.Operations)
+                opName = calculator.Operation("mixed")</span>
+        default:
+                <span class="cov8" title="1">result, err = calculator.Calculate(req.Operation, req.Numbers)
+                opName = req.Operation</span>
+        }
+
+        <span class="cov8" title="1">if err != nil </span>{
+                <span class="cov8" title="1">status, code := mapDomainError(err)
+                writeError(w, status, err.Error(), code)
+                return
+</span>        }
+
+        <span class="cov8" title="1">writeJSON(w, http.StatusOK, CalculateResponse{
+                Result:     result,
+                Operation:  opName,
+                Expression: req.Expression,
+        })</span>
+}
+
+func mapDomainError(err error) (int, string) {
+        <span class="cov8" title="1">switch </span>{
+        case errors.Is(err, calculator.ErrInvalidOperation):
+                <span class="cov8" title="1">return http.StatusBadRequest, CodeInvalidOperation</span>
+        case errors.Is(err, calculator.ErrInvalidExpression):
+                <span class="cov8" title="1">return http.StatusBadRequest, CodeInvalidExpression</span>
+        case errors.Is(err, calculator.ErrMissingNumbers):
+                <span class="cov8" title="1">return http.StatusBadRequest, CodeMissingNumbers</span>
+        case errors.Is(err, calculator.ErrDivisionByZero):
+                <span class="cov8" title="1">return http.StatusUnprocessableEntity, CodeDivisionByZero</span>
+        case errors.Is(err, calculator.ErrNegativeSqrt):
+                <span class="cov8" title="1">return http.StatusUnprocessableEntity, CodeNegativeSqrt</span>
+        case errors.Is(err, calculator.ErrOverflow):
+                <span class="cov8" title="1">return http.StatusUnprocessableEntity, CodeOverflow</span>
+        default:
+                <span class="cov8" title="1">return http.StatusInternalServerError, CodeInternalError</span>
+        }
+}
+
+func writeError(w http.ResponseWriter, status int, message string, code string) {
+        <span class="cov8" title="1">writeJSON(w, status, ErrorResponse{
+                Error: message,
+                Code:  code,
+        })
+</span>}
+
+func writeJSON(w http.ResponseWriter, status int, payload any) {
+        <span class="cov8" title="1">w.Header().Set("Content-Type", "application/json; charset=utf-8")
+        w.WriteHeader(status)
+        _ = json.NewEncoder(w).Encode(payload)
+</span>}
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>

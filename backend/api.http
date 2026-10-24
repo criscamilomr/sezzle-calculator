@@ -1,0 +1,183 @@
+@baseUrl = http://localhost:8080/api/v1
+
+### 1. Health Check (200 OK)
+GET {{baseUrl}}/health
+Accept: application/json
+
+### ============================================================================
+### MIXED OPERATIONS & MULTI-NUMBER EXPRESSIONS (PEMDAS / BODMAS)
+### ============================================================================
+
+### 2. Mixed Expression String: 5+2×3 (200 OK -> 11)
+POST {{baseUrl}}/calculate
+Content-Type: application/json
+
+{
+  "expression": "5+2×3"
+}
+
+### 3. Multi-Number Expression String: 1+6+9+5+3 (200 OK -> 24)
+POST {{baseUrl}}/calculate
+Content-Type: application/json
+
+{
+  "expression": "1+6+9+5+3"
+}
+
+### 4. Mixed Operations Array: 5 + 2 * 3 (200 OK -> 11)
+POST {{baseUrl}}/calculate
+Content-Type: application/json
+
+{
+  "numbers": [5, 2, 3],
+  "operations": ["add", "multiply"]
+}
+
+### 5. Mixed Operations Array All Precedence Levels: 20 - 12 / 3 + 2 ^ 3 (200 OK -> 24)
+POST {{baseUrl}}/calculate
+Content-Type: application/json
+
+{
+  "numbers": [20, 12, 3, 2, 3],
+  "operations": ["subtract", "divide", "add", "exponent"]
+}
+
+### 6. Complex Expression with Parentheses & Square Root: (5+2)×3 + √144 (200 OK -> 33)
+POST {{baseUrl}}/calculate
+Content-Type: application/json
+
+{
+  "expression": "(5+2)×3 + √144"
+}
+
+### 7. Multi-Number Single Operation: 1 + 6 + 9 + 5 + 3 (200 OK -> 24)
+POST {{baseUrl}}/calculate
+Content-Type: application/json
+
+{
+  "operation": "add",
+  "numbers": [1, 6, 9, 5, 3]
+}
+
+### ============================================================================
+### STANDARD SINGLE OPERATIONS
+### ============================================================================
+
+### 8. Addition - Floating-Point Precision IEEE 754 (200 OK -> 0.3)
+POST {{baseUrl}}/calculate
+Content-Type: application/json
+
+{
+  "operation": "add",
+  "numbers": [0.1, 0.2]
+}
+
+### 9. Subtraction - Multiple Numbers (200 OK -> 60)
+POST {{baseUrl}}/calculate
+Content-Type: application/json
+
+{
+  "operation": "subtract",
+  "numbers": [100, 20, 15, 5]
+}
+
+### 10. Multiplication - Multiple Numbers (200 OK -> 120)
+POST {{baseUrl}}/calculate
+Content-Type: application/json
+
+{
+  "operation": "multiply",
+  "numbers": [2, 3, 4, 5]
+}
+
+### 11. Division (200 OK -> 6.25)
+POST {{baseUrl}}/calculate
+Content-Type: application/json
+
+{
+  "operation": "divide",
+  "numbers": [25, 4]
+}
+
+### 12. Exponentiation - 2^10 (200 OK -> 1024)
+POST {{baseUrl}}/calculate
+Content-Type: application/json
+
+{
+  "operation": "exponent",
+  "numbers": [2, 10]
+}
+
+### 13. Percentage - 15% of 200 (200 OK -> 30)
+POST {{baseUrl}}/calculate
+Content-Type: application/json
+
+{
+  "operation": "percent",
+  "numbers": [200, 15]
+}
+
+### 14. Square Root - Unary Operation (200 OK -> 12)
+POST {{baseUrl}}/calculate
+Content-Type: application/json
+
+{
+  "operation": "sqrt",
+  "numbers": [144]
+}
+
+### ============================================================================
+### EDGE CASES & ERROR VALIDATION
+### ============================================================================
+
+### 15. Division by Zero in Mixed Expression (422 Unprocessable Entity -> DIVISION_BY_ZERO)
+POST {{baseUrl}}/calculate
+Content-Type: application/json
+
+{
+  "expression": "5 + 10 ÷ (3 - 3)"
+}
+
+### 16. Negative Square Root (422 Unprocessable Entity -> NEGATIVE_SQRT)
+POST {{baseUrl}}/calculate
+Content-Type: application/json
+
+{
+  "operation": "sqrt",
+  "numbers": [-25]
+}
+
+### 17. Numeric Overflow +Inf (422 Unprocessable Entity -> NUMERIC_OVERFLOW)
+POST {{baseUrl}}/calculate
+Content-Type: application/json
+
+{
+  "operation": "exponent",
+  "numbers": [10, 1000]
+}
+
+### 18. Invalid Expression Syntax (400 Bad Request -> INVALID_EXPRESSION)
+POST {{baseUrl}}/calculate
+Content-Type: application/json
+
+{
+  "expression": "5 + * 3"
+}
+
+### 19. Invalid Operation (400 Bad Request -> INVALID_OPERATION)
+POST {{baseUrl}}/calculate
+Content-Type: application/json
+
+{
+  "operation": "modulo",
+  "numbers": [10, 3]
+}
+
+### 20. Missing Second Operand on Binary Operation (400 Bad Request -> MISSING_NUMBERS)
+POST {{baseUrl}}/calculate
+Content-Type: application/json
+
+{
+  "operation": "add",
+  "numbers": [10]
+}

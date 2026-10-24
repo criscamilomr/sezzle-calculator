@@ -1,0 +1,25 @@
+
+ RUN  v5.0.5 /Users/criscamilomr/Programming/sezzle-calculator/frontend
+      Coverage enabled with v8
+
+ ✓ src/services/calculatorApi.test.ts (7 tests) 4ms
+ ✓ src/hooks/useCalculator.test.ts (19 tests) 17ms
+ ✓ src/App.test.tsx (7 tests) 321ms
+
+ Test Files  3 passed (3)
+      Tests  33 passed (33)
+   Start at  00:47:18
+   Duration  692ms (environment 54%, tests 29%, setup 11%, worker 4%, transform 1%, import 1%)
+
+ % Coverage report from v8
+-------------------|---------|----------|---------|---------|-----------------------------------------------
+File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s                             
+-------------------|---------|----------|---------|---------|-----------------------------------------------
+All files          |   92.67 |    81.86 |     100 |   94.33 |                                               
+ src               |    98.8 |    91.07 |     100 |     100 |                                               
+  App.tsx          |    98.8 |    91.07 |     100 |     100 | 13,68,108                                     
+ src/hooks         |   88.88 |    75.86 |     100 |    90.9 |                                               
+  useCalculator.ts |   88.88 |    75.86 |     100 |    90.9 | 67-70,110-113,176,198,234,285,329,387,433-436 
+ src/services      |     100 |      100 |     100 |     100 |                                               
+  calculatorApi.ts |     100 |      100 |     100 |     100 |                                               
+-------------------|---------|----------|---------|---------|-----------------------------------------------

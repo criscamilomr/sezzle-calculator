@@ -1,0 +1,19 @@
+# macOS & OS artifacts
+.DS_Store
+Thumbs.db
+
+# IDE & Editor folders
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Node / Frontend build artifacts
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+frontend/*.local
+*.log
+
+# Go / Backend build binaries
+backend/calculator-api
+backend/*.test

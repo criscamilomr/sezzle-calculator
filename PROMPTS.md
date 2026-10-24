@@ -1,0 +1,22 @@
+# AI Prompts Used During Development
+
+## Backend Prompts
+- Please implement the logic for each math operation.
+- Please create a comprehensive set of test cases that cover every operation and every functional aspect to verify that everything works as it should, including both normal cases and edge cases.
+- Please implement the translation of domain errors into HTTP codes and the "calculate" handler.
+- Now, please add a comprehensive set of tests for the handler package to validate each endpoint and every functional aspect, to verify that everything works as it should—including both the correct cases and the edge cases.
+- I need some major changes to the backend. I want the calculator to allow mixed operations with multiple numbers, as shown in the images. Currently, I can only perform operations with two numbers at a time, and this limits its usability. Make the necessary changes and update the test suite.
+- Please give me some endpoints to test with the format used by the Visual Studio Code REST Client extension.
+- The percentage function isn't working as expected. It should be used to convert a number into a fraction of 100 and facilitate operations such as calculating proportional parts, discounts, or increases in an amount, as shown in the first image. If I try to perform the same operation in the app, an error appears. Make the necessary changes and update the tests that contain that error.
+
+## Frontend Prompts
+- Implement the API service layer from the `calculatorApi.ts` file using the same interfaces found in the backend (`CalculateRequest`, `CalculateResponse`, `ErrorResponse`).
+- Implement the custom hook `useCalculator.ts` to display the values of the selected operation in the UI, covering all the operations and also having a history to store previous operations and results. This includes UI components to display the values of the selected operation and the history of previous operations and results.
+- Now implement the `App.tsx` file to display the calculator UI, covering all the operations, the complete grid of the numbers `0-9`, `.`, `+/-`, `AC`, `Backspace`, `R` (Square root), `%`, `^`, `/`, `*`, `-`, `=` ...and also having a history to store previous operations and results including the UI components to display the values of the selected operation and the history of previous operations and results. This custom hook should also handle errors from the API and display them in the UI.
+- The square root is not displayed as I want to. I want the operation to begin by selecting the square root symbol, which should then appear on the calculator screen enclosed in parentheses: `√()`. For the exponential, I want the exponent to appear above the numerator, as shown in the image.
+- Unit tests for the frontend are missing. Please implement them correctly and idiomatically, using clean code that follows the frontend design and architectural standards for Vite. Create a comprehensive set of unit tests.
+- I don't like the app background with those blurred colors in the corners. I want a more professional and uniform look.
+- I want there to be a subtle and elegant animation when new results are added to the history. Currently, they simply appear as pop-ups, and the dimensions change abruptly. I want the container box to expand smoothly as new items appear, and for each item to appear gradually.
+- I want the same thing to happen when an error is displayed, as it currently appears abruptly. Apply the same gradual transition. On the other hand, the title "Calculator" doesn't fit very well with the aesthetics of the app. I want you to analyze the UI and adjust its size, font, color, etc., so that it fits better.
+- As the history grows, the entries pile up on top of each other and become unreadable. I want a slider to appear when the container box reaches its maximum size, allowing me to scroll vertically between each item in the history so that they don't get smaller. On the other hand, is it possible for the history to persist after reloading the page?
+- It seems to me that the shortcut card doesn't make sense because it doesn't specifically mention that you can use the keyboard. I think it's better to mention that you can use the keyboard and say to use the `R` key for the square root.
